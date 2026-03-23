@@ -1,0 +1,183 @@
+name: RN Cloud Build
+
+on:
+  # Baseline trigger strategy: validate incoming changes and direct branch updates.
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ios_scheme:
+        description: iOS scheme name
+        required: true
+        default: YourApp
+        type: string
+      ios_configuration:
+        description: iOS configuration
+        required: true
+        default: Debug
+        type: string
+      android_variant:
+        description: Android Gradle variant
+        required: true
+        default: Debug
+        type: string
+      artifact_retention_days:
+        description: Artifact retention days
+        required: true
+        default: '7'
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  IOS_SCHEME: YourApp
+  IOS_CONFIGURATION: Debug
+  ANDROID_VARIANT: Debug
+  ARTIFACT_RETENTION_DAYS: '7'
+
+jobs:
+  ios:
+    name: iOS simulator build
+    runs-on: macos-latest
+    outputs:
+      artifact_name: ${{ steps.build.outputs.artifact-name }}
+      artifact_id: ${{ steps.build.outputs.artifact-id }}
+      artifact_url: ${{ steps.build.outputs.artifact-url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve Node version from package.json engines
+        id: node-version
+        run: |
+          set -euo pipefail
+          NODE_SPEC="$(python3 - <<'PY'
+import json
+from pathlib import Path
+pkg = Path('package.json')
+if not pkg.exists():
+    print('22')
+else:
+    data = json.loads(pkg.read_text())
+    print((data.get('engines', {}).get('node') or '22').strip())
+PY
+          )"
+          echo "value=$NODE_SPEC" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Install CocoaPods dependencies
+        run: |
+          set -euo pipefail
+          IOS_SOURCE_DIR="$(npx react-native config | node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(j.project?.ios?.sourceDir || 'ios')")"
+          cd "$IOS_SOURCE_DIR"
+          pod install --repo-update
+
+      - name: Resolve iOS inputs
+        id: ios-inputs
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "scheme=${{ inputs.ios_scheme }}" >> "$GITHUB_OUTPUT"
+            echo "config=${{ inputs.ios_configuration }}" >> "$GITHUB_OUTPUT"
+            echo "retention=${{ inputs.artifact_retention_days }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "scheme=${{ env.IOS_SCHEME }}" >> "$GITHUB_OUTPUT"
+            echo "config=${{ env.IOS_CONFIGURATION }}" >> "$GITHUB_OUTPUT"
+            echo "retention=${{ env.ARTIFACT_RETENTION_DAYS }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build iOS simulator
+        id: build
+        uses: ./.github/actions/github-actions/ios-build
+        with:
+          scheme: ${{ steps.ios-inputs.outputs.scheme }}
+          configuration: ${{ steps.ios-inputs.outputs.config }}
+          artifact-prefix: rn-ios-simulator
+          artifact-retention-days: ${{ steps.ios-inputs.outputs.retention }}
+
+  android:
+    name: Android emulator build
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.build.outputs.artifact-name }}
+      artifact_id: ${{ steps.build.outputs.artifact-id }}
+      artifact_url: ${{ steps.build.outputs.artifact-url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Resolve Node version from package.json engines
+        id: node-version
+        run: |
+          set -euo pipefail
+          NODE_SPEC="$(python3 - <<'PY'
+import json
+from pathlib import Path
+pkg = Path('package.json')
+if not pkg.exists():
+    print('22')
+else:
+    data = json.loads(pkg.read_text())
+    print((data.get('engines', {}).get('node') or '22').strip())
+PY
+          )"
+          echo "value=$NODE_SPEC" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Resolve Android inputs
+        id: android-inputs
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "variant=${{ inputs.android_variant }}" >> "$GITHUB_OUTPUT"
+            echo "retention=${{ inputs.artifact_retention_days }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "variant=${{ env.ANDROID_VARIANT }}" >> "$GITHUB_OUTPUT"
+            echo "retention=${{ env.ARTIFACT_RETENTION_DAYS }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Android emulator APK
+        id: build
+        uses: ./.github/actions/github-actions/android-build
+        with:
+          variant: ${{ steps.android-inputs.outputs.variant }}
+          artifact-prefix: rn-android-emulator
+          artifact-retention-days: ${{ steps.android-inputs.outputs.retention }}
+
+  summary:
+    name: Build summary
+    runs-on: ubuntu-latest
+    needs: [ios, android]
+    steps:
+      - name: Publish artifact metadata
+        run: |
+          {
+            echo "## RN Cloud Build Artifacts"
+            echo ""
+            echo "- iOS simulator (.app.tar.gz): name=${{ needs.ios.outputs.artifact_name }}, id=${{ needs.ios.outputs.artifact_id }}"
+            echo "- Android emulator (.apk): name=${{ needs.android.outputs.artifact_name }}, id=${{ needs.android.outputs.artifact_id }}"
+            echo ""
+            echo "Artifact URLs (auth required):"
+            echo "- iOS: ${{ needs.ios.outputs.artifact_url }}"
+            echo "- Android: ${{ needs.android.outputs.artifact_url }}"
+          } >> "$GITHUB_STEP_SUMMARY"
