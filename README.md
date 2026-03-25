@@ -1,50 +1,66 @@
-# Welcome to your Expo app 👋
+# GrubEyes 🍳�
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+GrubEyes is an intelligent, camera-first Expo React Native application that helps you figure out what to cook based on the ingredients you have on hand. Simply take a picture of your pantry or fridge, and GrubEyes will use the Google Gemini API to identify your ingredients and generate creative, customized recipe ideas tailored to your dietary preferences (likes, dislikes, and allergies).
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Ingredient Scanning:** Use your device's camera to seamlessly extract ingredient lists from photos.
+- **AI Recipe Generation:** Powered by Gemini 3 Flash, providing 5 unique and creative recipe suggestions based on your available ingredients.
+- **Dietary Personalization:** Create profiles for yourself or your family members with specific likes, dislikes, and allergies to ensure every recipe is a hit.
+- **Step-by-Step Instructions:** Get comprehensive cooking instructions, prep times, difficulty levels, and a breakdown of which ingredients were assumed versus available.
+- **Recipe Reworking:** Easily regenerate a recipe if you're missing an ingredient or want a different option.
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- npm or yarn
+- Expo CLI
+
+## Getting Started
+
+1. **Clone the repository and install dependencies:**
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Set up Environment Variables:**
+
+   Create a `.env.local` file in the root directory of the project. 
+
+   **Required:**
+   - \`EXPO_PUBLIC_GEMINI_API_KEY\`: Your Google Gemini API Key. This is required for the core AI features (ingredient scanning and recipe generation) to work.
+
+   **Optional:**
+   - \`SENTRY_AUTH_TOKEN\`: Your Sentry API key/auth token. This is only needed if you want to upload source maps to Sentry for error tracking during production builds. If you don't use Sentry, you can safely skip this.
+
+   Your \`.env.local\` should look like this:
+   ```env
+   EXPO_PUBLIC_GEMINI_API_KEY="your_gemini_api_key_here"
+   
+   # Optional
+   SENTRY_AUTH_TOKEN="your_sentry_auth_token_here"
+   ```
+
+3. **Start the Application:**
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+   You can then open the app on your physical device using the Expo Go app, or run it on an iOS Simulator (`i`) or Android Emulator (`a`). 
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `app/`: Contains the Expo Router file-based routing (screens and layouts).
+- `components/`: Reusable React components (e.g., `IngredientScanner`).
+- `utils/`: Utility functions, including the Gemini API integration (`gemini.ts`) and local storage management (`storage.ts`).
+- `design-system/`: Foundational UI components and styling.
 
-## Get a fresh project
+## Technologies Used
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo](https://expo.dev/) & [React Native](https://reactnative.dev/)
+- [Google Gemini API](https://ai.google.dev/) (@google/genai)
+- [Expo Router](https://docs.expo.dev/router/introduction/) for navigation
+- [Zod](https://zod.dev/) for schema validation
+- [Sentry](https://sentry.io/) for error tracking (optional)
