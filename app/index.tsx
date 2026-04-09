@@ -2,7 +2,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ClayPressable } from '../components/ClayPressable';
 import { IngredientEditor } from '../components/IngredientEditor';
 import { IngredientScanner } from '../components/IngredientScanner';
@@ -145,93 +145,98 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerIconWrapper}>
-          <Image source={require('../assets/images/app-logo.png')} style={styles.headerIcon} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerIconWrapper}>
+            <Image source={require('../assets/images/app-logo.png')} style={styles.headerIcon} />
+          </View>
+          <Text style={styles.headerTitle}>GrubEyes</Text>
         </View>
-        <Text style={styles.headerTitle}>GrubEyes</Text>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {(flow === 'extracting' || flow === 'cooking') ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#CA8A04" />
-            <Text style={styles.loadingText}>
-              {flow === 'extracting' ? 'Scanning your ingredients...' : 'The Chef is thinking...'}
-            </Text>
-          </View>
-
-        ) : flow === 'editing' ? (
-          <View>
-            <IngredientEditor
-              ingredients={ingredients}
-              meProfile={meProfile}
-              onUpdate={setIngredients}
-              onDislike={handleDislike}
-              onLike={handleLike}
-            />
-
-            <WhosEating
-              eaters={appData.eaters}
-              selectedIds={selectedEaterIds}
-              onToggle={handleToggleEater}
-              onSaveEater={handleSaveEater}
-              onDeleteEater={handleDeleteEater}
-            />
-
-            <ClayPressable style={styles.cookButton} onPress={handleCookThese}>
-              <Text style={styles.cookButtonText}>🍳 Cook These!</Text>
-            </ClayPressable>
-          </View>
-
-        ) : flow === 'results' ? (
-          <View>
-            <View style={styles.ingredientsPill}>
-              <Text style={styles.ingredientsText}>Cooking with: {ingredients.join(', ')}</Text>
-              {selectedEaterIds.length > 0 && (
-                <Text style={styles.eatersText}>
-                  For: {appData.eaters.filter(e => selectedEaterIds.includes(e.id)).map(e => e.name).join(', ')}
-                </Text>
-              )}
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {(flow === 'extracting' || flow === 'cooking') ? (
+            <View style={styles.centerContainer}>
+              <ActivityIndicator size="large" color="#CA8A04" />
+              <Text style={styles.loadingText}>
+                {flow === 'extracting' ? 'Scanning your ingredients...' : 'The Chef is thinking...'}
+              </Text>
             </View>
 
-            {recipes.map((recipe, index) => (
-              <ClayPressable
-                key={index}
-                style={styles.card}
-                onPress={() => {
-                  const ingredientsQuery = encodeURIComponent(JSON.stringify(ingredients));
-                  const reasoningQuery = recipe.dietaryReasoning ? `&reasoning=${encodeURIComponent(recipe.dietaryReasoning)}` : '';
-                  router.push(`/recipe/${recipe.id}?title=${encodeURIComponent(recipe.title)}${reasoningQuery}&ingredients=${ingredientsQuery}` as any)
-                }}
-              >
-                <Text style={styles.recipeTitle}>{recipe.title}</Text>
-                <Text style={styles.recipeDescription}>{recipe.shortDescription}</Text>
-                <View style={styles.metaRow}>
-                  <Text style={[styles.metaBadge, styles.timeBadge]}>{recipe.prepTime}</Text>
-                  <Text style={[styles.metaBadge, styles.difficultyBadge]}>{recipe.difficulty}</Text>
-                </View>
-              </ClayPressable>
-            ))}
+          ) : flow === 'editing' ? (
+            <View>
+              <IngredientEditor
+                ingredients={ingredients}
+                meProfile={meProfile}
+                onUpdate={setIngredients}
+                onDislike={handleDislike}
+                onLike={handleLike}
+              />
 
-            <View style={styles.resultActions}>
-              <ClayPressable style={styles.refreshButton} onPress={handleRefresh}>
-                <Image source={require('../assets/images/btn-refresh.png')} style={styles.refreshIcon} />
-                <Text style={styles.refreshText}>New Recipes</Text>
-              </ClayPressable>
-              <ClayPressable style={styles.editButton} onPress={() => setFlow('editing')}>
-                <Text style={styles.editButtonText}>✏️ Edit</Text>
+              <WhosEating
+                eaters={appData.eaters}
+                selectedIds={selectedEaterIds}
+                onToggle={handleToggleEater}
+                onSaveEater={handleSaveEater}
+                onDeleteEater={handleDeleteEater}
+              />
+
+              <ClayPressable style={styles.cookButton} onPress={handleCookThese}>
+                <Text style={styles.cookButtonText}>🍳 Cook These!</Text>
               </ClayPressable>
             </View>
-          </View>
 
-        ) : (
-          <View style={styles.centerContainer}>
-            <Image source={require('../assets/images/empty-state.png')} style={styles.emptyStateImage} />
-            <Text style={styles.emptyText}>Let's see what we're working with! 👀 Snap a photo of your ingredients to get started.</Text>
-          </View>
-        )}
-      </ScrollView>
+          ) : flow === 'results' ? (
+            <View>
+              <View style={styles.ingredientsPill}>
+                <Text style={styles.ingredientsText}>Cooking with: {ingredients.join(', ')}</Text>
+                {selectedEaterIds.length > 0 && (
+                  <Text style={styles.eatersText}>
+                    For: {appData.eaters.filter(e => selectedEaterIds.includes(e.id)).map(e => e.name).join(', ')}
+                  </Text>
+                )}
+              </View>
+
+              {recipes.map((recipe, index) => (
+                <ClayPressable
+                  key={index}
+                  style={styles.card}
+                  onPress={() => {
+                    const ingredientsQuery = encodeURIComponent(JSON.stringify(ingredients));
+                    const reasoningQuery = recipe.dietaryReasoning ? `&reasoning=${encodeURIComponent(recipe.dietaryReasoning)}` : '';
+                    router.push(`/recipe/${recipe.id}?title=${encodeURIComponent(recipe.title)}${reasoningQuery}&ingredients=${ingredientsQuery}` as any)
+                  }}
+                >
+                  <Text style={styles.recipeTitle}>{recipe.title}</Text>
+                  <Text style={styles.recipeDescription}>{recipe.shortDescription}</Text>
+                  <View style={styles.metaRow}>
+                    <Text style={[styles.metaBadge, styles.timeBadge]}>{recipe.prepTime}</Text>
+                    <Text style={[styles.metaBadge, styles.difficultyBadge]}>{recipe.difficulty}</Text>
+                  </View>
+                </ClayPressable>
+              ))}
+
+              <View style={styles.resultActions}>
+                <ClayPressable style={styles.refreshButton} onPress={handleRefresh}>
+                  <Image source={require('../assets/images/btn-refresh.png')} style={styles.refreshIcon} />
+                  <Text style={styles.refreshText}>New Recipes</Text>
+                </ClayPressable>
+                <ClayPressable style={styles.editButton} onPress={() => setFlow('editing')}>
+                  <Text style={styles.editButtonText}>✏️ Edit</Text>
+                </ClayPressable>
+              </View>
+            </View>
+
+          ) : (
+            <View style={styles.centerContainer}>
+              <Image source={require('../assets/images/empty-state.png')} style={styles.emptyStateImage} />
+              <Text style={styles.emptyText}>Let's see what we're working with! 👀 Snap a photo of your ingredients to get started.</Text>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {(flow === 'idle' || flow === 'editing' || flow === 'results') && (
         <View style={styles.fabContainer}>

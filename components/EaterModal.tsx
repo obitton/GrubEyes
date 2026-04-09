@@ -153,98 +153,104 @@ export function EaterModal({ visible, eater, onSave, onDelete, onClose }: EaterM
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <View style={styles.overlay}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <View style={styles.modal}>
-                        <Text style={styles.title}>
-                            {eater?.isMe ? '👨‍🍳 Edit My Preferences' : eater ? `Edit ${eater.name}` : '🍽️ Add an Eater'}
-                        </Text>
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    bounces={false}
+                    automaticallyAdjustKeyboardInsets={true}
+                >
+                    <View style={styles.modalWrapper}>
+                        <View style={styles.modal}>
+                            <Text style={styles.title}>
+                                {eater?.isMe ? '👨‍🍳 Edit My Preferences' : eater ? `Edit ${eater.name}` : '🍽️ Add an Eater'}
+                            </Text>
 
-                        {/* Emoji + Name row (hide emoji for "Me") */}
-                        {!eater?.isMe && (
-                            <>
-                                <Text style={styles.label}>Pick an avatar</Text>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.emojiRow}>
-                                    {AVATAR_IDS.map((a) => (
-                                        <ClayPressable
-                                            key={a}
-                                            style={[styles.emojiBtn, avatar === a && styles.emojiBtnSelected]}
-                                            onPress={() => setAvatar(a)}
-                                        >
-                                            <Image source={AVATARS[a]} style={styles.avatarImg} />
-                                        </ClayPressable>
-                                    ))}
-                                </ScrollView>
+                            {/* Emoji + Name row (hide emoji for "Me") */}
+                            {!eater?.isMe && (
+                                <>
+                                    <Text style={styles.label}>Pick an avatar</Text>
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.emojiRow}>
+                                        {AVATAR_IDS.map((a) => (
+                                            <ClayPressable
+                                                key={a}
+                                                style={[styles.emojiBtn, avatar === a && styles.emojiBtnSelected]}
+                                                onPress={() => setAvatar(a)}
+                                            >
+                                                <Image source={AVATARS[a]} style={styles.avatarImg} />
+                                            </ClayPressable>
+                                        ))}
+                                    </ScrollView>
 
-                                <Text style={styles.label}>Name</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="e.g. Emma"
-                                    placeholderTextColor="#9CA3AF"
-                                    value={name}
-                                    onChangeText={setName}
-                                />
-                            </>
-                        )}
-
-                        {/* Quick-add Likes */}
-                        <QuickAddList
-                            label="Loves these 💚"
-                            icon={<ThumbsUp size={16} color="#CA8A04" />}
-                            items={likes}
-                            color="#CA8A04"
-                            onAdd={(item) => addToList(likes, setLikes, item)}
-                            onRemove={(item) => removeFromList(setLikes, item)}
-                        />
-
-                        {/* Quick-add Dislikes */}
-                        <QuickAddList
-                            label="Dislikes 👎"
-                            icon={<ThumbsDown size={16} color="#DC2626" />}
-                            items={dislikes}
-                            color="#DC2626"
-                            onAdd={(item) => addToList(dislikes, setDislikes, item)}
-                            onRemove={(item) => removeFromList(setDislikes, item)}
-                        />
-
-                        {/* Quick-add Allergies */}
-                        <QuickAddList
-                            label="⚠️ Allergies (hard constraints)"
-                            icon={<AlertTriangle size={16} color="#EA580C" />}
-                            items={allergies}
-                            color="#EA580C"
-                            onAdd={(item) => addToList(allergies, setAllergies, item)}
-                            onRemove={(item) => removeFromList(setAllergies, item)}
-                        />
-
-                        {/* Freeform notes */}
-                        <Text style={styles.label}>Other notes (optional)</Text>
-                        <TextInput
-                            style={[styles.input, styles.multiline]}
-                            placeholder="e.g. only eats carrots if baked, no spicy food"
-                            placeholderTextColor="#9CA3AF"
-                            value={notesText}
-                            onChangeText={setNotesText}
-                            multiline
-                        />
-
-                        {/* Actions */}
-                        <View style={styles.actions}>
-                            <ClayPressable style={styles.cancelBtn} onPress={onClose}>
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </ClayPressable>
-
-                            {eater && !eater.isMe && onDelete && (
-                                <ClayPressable
-                                    style={styles.deleteBtn}
-                                    onPress={() => { onDelete(eater.id); onClose(); }}
-                                >
-                                    <Text style={styles.deleteText}>Delete</Text>
-                                </ClayPressable>
+                                    <Text style={styles.label}>Name</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="e.g. Emma"
+                                        placeholderTextColor="#9CA3AF"
+                                        value={name}
+                                        onChangeText={setName}
+                                    />
+                                </>
                             )}
 
-                            <ClayPressable style={styles.saveBtn} onPress={handleSave}>
-                                <Text style={styles.saveText}>Save</Text>
-                            </ClayPressable>
+                            {/* Quick-add Likes */}
+                            <QuickAddList
+                                label="Loves these 💚"
+                                icon={<ThumbsUp size={16} color="#CA8A04" />}
+                                items={likes}
+                                color="#CA8A04"
+                                onAdd={(item) => addToList(likes, setLikes, item)}
+                                onRemove={(item) => removeFromList(setLikes, item)}
+                            />
+
+                            {/* Quick-add Dislikes */}
+                            <QuickAddList
+                                label="Dislikes 👎"
+                                icon={<ThumbsDown size={16} color="#DC2626" />}
+                                items={dislikes}
+                                color="#DC2626"
+                                onAdd={(item) => addToList(dislikes, setDislikes, item)}
+                                onRemove={(item) => removeFromList(setDislikes, item)}
+                            />
+
+                            {/* Quick-add Allergies */}
+                            <QuickAddList
+                                label="⚠️ Allergies (hard constraints)"
+                                icon={<AlertTriangle size={16} color="#EA580C" />}
+                                items={allergies}
+                                color="#EA580C"
+                                onAdd={(item) => addToList(allergies, setAllergies, item)}
+                                onRemove={(item) => removeFromList(setAllergies, item)}
+                            />
+
+                            {/* Freeform notes */}
+                            <Text style={styles.label}>Other notes (optional)</Text>
+                            <TextInput
+                                style={[styles.input, styles.multiline]}
+                                placeholder="e.g. only eats carrots if baked, no spicy food"
+                                placeholderTextColor="#9CA3AF"
+                                value={notesText}
+                                onChangeText={setNotesText}
+                                multiline
+                            />
+
+                            {/* Actions */}
+                            <View style={styles.actions}>
+                                <ClayPressable style={styles.cancelBtn} onPress={onClose}>
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </ClayPressable>
+
+                                {eater && !eater.isMe && onDelete && (
+                                    <ClayPressable
+                                        style={styles.deleteBtn}
+                                        onPress={() => { onDelete(eater.id); onClose(); }}
+                                    >
+                                        <Text style={styles.deleteText}>Delete</Text>
+                                    </ClayPressable>
+                                )}
+
+                                <ClayPressable style={styles.saveBtn} onPress={handleSave}>
+                                    <Text style={styles.saveText}>Save</Text>
+                                </ClayPressable>
+                            </View>
                         </View>
                     </View>
                 </ScrollView>
@@ -286,7 +292,8 @@ const qStyles = StyleSheet.create({
 // Modal styles
 const styles = StyleSheet.create({
     overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center' },
-    scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+    scrollContent: { flexGrow: 1, padding: 20 },
+    modalWrapper: { flex: 1, justifyContent: 'center' },
     modal: {
         backgroundColor: '#FFF7ED', borderRadius: 24, padding: 24,
         borderWidth: 4, borderColor: '#FED7AA',
